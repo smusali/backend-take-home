@@ -377,12 +377,24 @@ def reset_db_state(db_session):
     Reset database state between tests.
     
     Ensures clean slate for each test by clearing all data.
+    Handles sessions that may have been rolled back due to constraint violations.
     """
     yield
     
-    db_session.query(Lead).delete()
-    db_session.query(User).delete()
-    db_session.commit()
+    # Check if session is in a valid state
+    if db_session.is_active:
+        try:
+            # If there's a pending transaction that failed, roll it back first
+            if db_session.in_transaction():
+                db_session.rollback()
+            
+            # Now clean up test data
+            db_session.query(Lead).delete()
+            db_session.query(User).delete()
+            db_session.commit()
+        except Exception:
+            # If cleanup fails for any reason, ensure we roll back
+            db_session.rollback()
 
 
 @pytest.fixture
