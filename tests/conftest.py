@@ -13,6 +13,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, UTC
 import uuid
 
+# Set environment variables BEFORE importing app
+# This prevents validation errors during app initialization
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["SECRET_KEY"] = "test-secret-key-minimum-32-characters-long"
+os.environ["SMTP_HOST"] = "localhost"
+os.environ["SMTP_USERNAME"] = "test@example.com"
+os.environ["SMTP_PASSWORD"] = "test-password"
+os.environ["SMTP_FROM_EMAIL"] = "noreply@example.com"
+os.environ["ATTORNEY_EMAIL"] = "attorney@example.com"
+os.environ["DEBUG"] = "True"
+os.environ["ENVIRONMENT"] = "test"
+
 import pytest
 from faker import Faker
 from sqlalchemy import create_engine
@@ -39,17 +51,8 @@ def test_settings():
     Override application settings for testing.
     
     Returns settings with test database and mock email configuration.
+    Environment variables are already set at the module level.
     """
-    os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-    os.environ["SECRET_KEY"] = "test-secret-key-minimum-32-characters-long"
-    os.environ["SMTP_HOST"] = "localhost"
-    os.environ["SMTP_USERNAME"] = "test@example.com"
-    os.environ["SMTP_PASSWORD"] = "test-password"
-    os.environ["SMTP_FROM_EMAIL"] = "noreply@example.com"
-    os.environ["ATTORNEY_EMAIL"] = "attorney@example.com"
-    os.environ["DEBUG"] = "True"
-    os.environ["ENVIRONMENT"] = "test"
-    
     return get_settings()
 
 

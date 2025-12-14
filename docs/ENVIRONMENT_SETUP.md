@@ -15,6 +15,7 @@
 
 **Validation:**
 - ✅ SECRET_KEY minimum 32 characters
+- ✅ SECRET_KEY rejects known insecure defaults
 - ✅ LOG_LEVEL must be valid Python logging level
 - ✅ MAX_FILE_SIZE between 1MB and 50MB
 - ✅ ACCESS_TOKEN_EXPIRE_MINUTES between 5 minutes and 7 days
@@ -37,7 +38,7 @@
 
 **Test Coverage:**
 - ✅ Minimal required fields initialization
-- ✅ SECRET_KEY validation (too short, sufficient length)
+- ✅ SECRET_KEY validation (too short, sufficient length, insecure defaults)
 - ✅ LOG_LEVEL validation (valid, invalid)
 - ✅ MAX_FILE_SIZE validation (too small, too large, valid)
 - ✅ ACCESS_TOKEN_EXPIRE_MINUTES validation (too short, too long)
@@ -69,7 +70,10 @@ make env
 
 2. **Edit `.env` with your values:**
    ```bash
-   # Update SECRET_KEY, SMTP credentials, etc.
+   # Generate secure SECRET_KEY first:
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   
+   # Then update .env with generated key and other credentials
    vim .env
    ```
 
@@ -92,7 +96,8 @@ make env
 - ✅ `.env.local` also ignored for local overrides
 - ✅ All sensitive values loaded from environment
 - ✅ Strong validation prevents misconfiguration
-- ⚠️ **Remember to change SECRET_KEY in production!**
+- ✅ **Application refuses to start with insecure default SECRET_KEY values**
+- 🔒 **Generate SECRET_KEY with:** `python -c "import secrets; print(secrets.token_urlsafe(32))"`
 
 ### Testing
 

@@ -56,9 +56,44 @@ class Settings(BaseSettings):
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key(cls, v: str) -> str:
-        """Ensure SECRET_KEY is sufficiently long for security."""
+        """
+        Ensure SECRET_KEY is sufficiently long and secure.
+        
+        Validates that:
+        - Key is not a known insecure default value or pattern
+        - Key is at least 32 characters long
+        """
+        # Check for insecure patterns BEFORE length check
+        # This ensures we catch insecure defaults even if they're too short
+        insecure_patterns = [
+            "your-secret-key-min-32-characters-change-in-production",
+            "change_me_generate_secure_key",
+            "changeme",
+            "secret",
+            "secretkey",
+        ]
+        
+        v_lower = v.lower()
+        
+        # Check for exact matches
+        if v_lower in insecure_patterns:
+            raise ValueError(
+                "SECRET_KEY cannot be a default placeholder value. "
+                "Generate a secure key using: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+            )
+        
+        # Check if the key starts with any insecure pattern (to catch padded versions)
+        for pattern in insecure_patterns:
+            if v_lower.startswith(pattern):
+                raise ValueError(
+                    "SECRET_KEY cannot be a default placeholder value. "
+                    "Generate a secure key using: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                )
+        
+        # Now check length
         if len(v) < 32:
             raise ValueError("SECRET_KEY must be at least 32 characters long")
+        
         return v
     
     @field_validator("LOG_LEVEL")

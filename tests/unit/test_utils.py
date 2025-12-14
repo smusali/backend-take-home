@@ -7,6 +7,7 @@ Tests validation functions, sanitization, and helper utilities.
 import pytest
 from fastapi import UploadFile
 from io import BytesIO
+from pydantic import ValidationError
 
 from app.schemas.validators import (
     validate_file_size,
@@ -24,6 +25,7 @@ from app.core.security import (
     create_access_token,
     verify_token
 )
+from app.core.config import Settings
 
 
 class TestFileValidators:
@@ -332,3 +334,97 @@ class TestSecurityFunctions:
         
         assert hashed.startswith("$2b$")
         assert verify_password(password, hashed) is True
+
+
+class TestConfigurationValidation:
+    """Tests for configuration validation and security."""
+    
+    def test_secret_key_rejects_default_placeholder(self):
+        """Test that default placeholder SECRET_KEY is rejected."""
+        env_vars = {
+            "SECRET_KEY": "CHANGE_ME_GENERATE_SECURE_KEY",
+            "SMTP_HOST": "smtp.example.com",
+            "SMTP_USERNAME": "user",
+            "SMTP_PASSWORD": "pass",
+            "SMTP_FROM_EMAIL": "from@example.com",
+            "ATTORNEY_EMAIL": "attorney@example.com"
+        }
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(**env_vars)
+        
+        error_msg = str(exc_info.value).lower()
+        assert "secret_key" in error_msg
+        assert "default placeholder" in error_msg or "cannot be a default" in error_msg
+    
+    def test_secret_key_rejects_old_default(self):
+        """Test that old default SECRET_KEY value is rejected."""
+        env_vars = {
+            "SECRET_KEY": "your-secret-key-min-32-characters-change-in-production",
+            "SMTP_HOST": "smtp.example.com",
+            "SMTP_USERNAME": "user",
+            "SMTP_PASSWORD": "pass",
+            "SMTP_FROM_EMAIL": "from@example.com",
+            "ATTORNEY_EMAIL": "attorney@example.com"
+        }
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(**env_vars)
+        
+        error_msg = str(exc_info.value).lower()
+        assert "secret_key" in error_msg
+    
+    def test_secret_key_rejects_common_insecure_values(self):
+        """Test that common insecure SECRET_KEY values are rejected."""
+        insecure_keys = ["changeme" + "x" * 24, "secret" + "x" * 26, "secretkey" + "x" * 23]
+        
+        for insecure_key in insecure_keys:
+            env_vars = {
+                "SECRET_KEY": insecure_key,
+                "SMTP_HOST": "smtp.example.com",
+                "SMTP_USERNAME": "user",
+                "SMTP_PASSWORD": "pass",
+                "SMTP_FROM_EMAIL": "from@example.com",
+                "ATTORNEY_EMAIL": "attorney@example.com"
+            }
+            
+            with pytest.raises(ValidationError) as exc_info:
+                Settings(**env_vars)
+            
+            error_msg = str(exc_info.value).lower()
+            assert "secret_key" in error_msg
+    
+    def test_secret_key_accepts_secure_random_value(self):
+        """Test that properly generated SECRET_KEY is accepted."""
+        import secrets
+        secure_key = secrets.token_urlsafe(32)
+        
+        env_vars = {
+            "SECRET_KEY": secure_key,
+            "SMTP_HOST": "smtp.example.com",
+            "SMTP_USERNAME": "user",
+            "SMTP_PASSWORD": "pass",
+            "SMTP_FROM_EMAIL": "from@example.com",
+            "ATTORNEY_EMAIL": "attorney@example.com"
+        }
+        
+        settings = Settings(**env_vars)
+        assert settings.SECRET_KEY == secure_key
+    
+    def test_secret_key_minimum_length_enforced(self):
+        """Test that SECRET_KEY minimum length is enforced."""
+        env_vars = {
+            "SECRET_KEY": "short",
+            "SMTP_HOST": "smtp.example.com",
+            "SMTP_USERNAME": "user",
+            "SMTP_PASSWORD": "pass",
+            "SMTP_FROM_EMAIL": "from@example.com",
+            "ATTORNEY_EMAIL": "attorney@example.com"
+        }
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(**env_vars)
+        
+        error_msg = str(exc_info.value).lower()
+        assert "secret_key" in error_msg
+        assert "32 characters" in error_msg

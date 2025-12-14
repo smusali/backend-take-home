@@ -74,7 +74,15 @@ docker-compose up -d
 docker-compose exec api alembic upgrade head
 ```
 
-#### 5. Access the Application
+#### 5. Seed Initial Data
+
+```bash
+docker-compose exec api python scripts/seed_db.py
+```
+
+This creates an initial admin user. Default credentials will be printed to the console.
+
+#### 6. Access the Application
 
 - **API**: http://localhost:8000
 - **Docs**: http://localhost:8000/docs
@@ -116,8 +124,10 @@ This creates a `.env` file from `.env.example`. Edit the `.env` file with your c
 # Database Configuration
 DATABASE_URL=sqlite:///./leads.db
 
-# Security Configuration (IMPORTANT: Change in production!)
-SECRET_KEY=your-secret-key-min-32-characters-change-in-production
+# Security Configuration
+# Generate a secure SECRET_KEY with:
+# python -c "import secrets; print(secrets.token_urlsafe(32))"
+SECRET_KEY=<your-generated-secure-key-here>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
@@ -142,7 +152,13 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 ```
 
 **Important Security Notes:**
-- Generate a secure `SECRET_KEY` (minimum 32 characters) for production
+- **SECRET_KEY is REQUIRED**: Generate a secure key (minimum 32 characters) using:
+  ```bash
+  python -c "import secrets; print(secrets.token_urlsafe(32))"
+  # or
+  openssl rand -hex 32
+  ```
+- The application will **fail to start** with insecure default values
 - Use environment-specific SMTP credentials
 - For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833)
 
@@ -154,7 +170,15 @@ make migrate-up
 
 This runs Alembic migrations to create the database schema with `leads` and `users` tables.
 
-#### 6. Run the Application
+#### 6. Seed Initial Data
+
+```bash
+make seed-db
+```
+
+This creates an initial admin user for accessing the attorney dashboard. Default credentials will be printed to the console.
+
+#### 7. Run the Application
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -215,6 +239,10 @@ backend-take-home/
 │   ├── unit/                     # Unit tests (131 tests)
 │   ├── integration/              # Integration tests (73 tests)
 │   └── e2e/                      # End-to-end tests (16 tests)
+├── scripts/                      # Database seeding and management scripts
+│   ├── seed_db.py                # Create initial admin user
+│   ├── create_user.py            # Create additional attorney users
+│   └── README.md                 # Scripts documentation
 ├── alembic/                      # Database migrations
 │   ├── versions/                 # Migration scripts
 │   └── env.py                    # Alembic environment configuration
@@ -465,6 +493,41 @@ make migrate-create MSG="description of changes"
 
 Alembic automatically detects model changes and generates migration scripts.
 
+## Database Seeding
+
+After running migrations, you need to create an initial admin user to access the attorney dashboard.
+
+### Create Initial Admin User
+```bash
+make seed-db
+```
+
+This creates a default admin account with the following credentials:
+- **Username:** `admin`
+- **Email:** `admin@leadmanagement.local`
+- **Password:** `Admin123!SecurePassword`
+
+**Important:** Change the default password after your first login!
+
+### Create Additional Users
+```bash
+make create-user USERNAME=attorney1 EMAIL=attorney1@firm.com PASSWORD=SecurePass123
+```
+
+**Password Requirements:**
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one digit
+
+**Username Requirements:**
+- 3-50 characters
+- Alphanumeric with underscores or hyphens only
+
+The script will validate all inputs and prevent duplicate usernames or emails.
+
+For more details on seeding scripts, see [scripts/README.md](scripts/README.md).
+
 ## Development Workflow
 
 ### 1. Activate Virtual Environment
@@ -507,7 +570,7 @@ make clean              # Remove generated files and caches
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | `sqlite:///./leads.db` | Database connection string |
-| `SECRET_KEY` | Yes | - | JWT signing key (min 32 chars) |
+| `SECRET_KEY` | **Yes** | **None** | JWT signing key (min 32 chars, must be securely generated) |
 | `ALGORITHM` | No | `HS256` | JWT algorithm |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `1440` | Token expiry time (24 hours) |
 | `SMTP_HOST` | Yes | - | SMTP server hostname |
@@ -585,7 +648,10 @@ docker-compose logs -f
 #### Production Checklist
 
 1. **Security**:
-   - Generate secure `SECRET_KEY`: `openssl rand -hex 32`
+   - **Generate secure `SECRET_KEY`**: 
+     ```bash
+     python -c "import secrets; print(secrets.token_urlsafe(32))"
+     ```
    - Set `ENVIRONMENT=production` and `DEBUG=False`
    - Change default PostgreSQL credentials in `docker-compose.yml`
    - Configure proper CORS origins
@@ -613,7 +679,10 @@ For complete Docker documentation, see [docs/DOCKER.md](docs/DOCKER.md).
 #### Environment Setup
 1. Set `ENVIRONMENT=production` in `.env`
 2. Set `DEBUG=False`
-3. Generate a secure `SECRET_KEY` (use `openssl rand -hex 32`)
+3. **Generate a secure `SECRET_KEY`** (required, will fail if using default):
+   ```bash
+   python -c "import secrets; print(secrets.token_urlsafe(32))"
+   ```
 4. Use PostgreSQL instead of SQLite:
    ```
    DATABASE_URL=postgresql://user:password@localhost/dbname

@@ -26,8 +26,9 @@ nano .env
 **Important**: Update these required environment variables:
 
 ```env
-# Security (REQUIRED)
-SECRET_KEY=your-secure-secret-key-at-least-32-characters-long
+# Security (REQUIRED - Application will not start without this)
+# Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+SECRET_KEY=<your-generated-secure-key-here>
 
 # SMTP Configuration (REQUIRED)
 SMTP_HOST=smtp.gmail.com
@@ -36,6 +37,14 @@ SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 SMTP_FROM_EMAIL=noreply@yourdomain.com
 ATTORNEY_EMAIL=attorney@yourdomain.com
+```
+
+**Security Note**: The `SECRET_KEY` must be a securely generated random string. The application will refuse to start with default placeholder values. Generate one using:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+# or
+openssl rand -hex 32
 ```
 
 ### 2. Start Services
@@ -58,24 +67,20 @@ Run database migrations:
 docker-compose exec api alembic upgrade head
 ```
 
-### 4. Create Admin User (Optional)
+### 4. Seed Initial Data
+
+Create the initial admin user:
 
 ```bash
-docker-compose exec api python -c "
-from app.db.database import SessionLocal
-from app.models.user import User
-from app.core.security import get_password_hash
+docker-compose exec api python scripts/seed_db.py
+```
 
-db = SessionLocal()
-user = User(
-    username='admin',
-    email='admin@example.com',
-    hashed_password=get_password_hash('ChangeMe123!')
-)
-db.add(user)
-db.commit()
-print('Admin user created: username=admin, password=ChangeMe123!')
-"
+This will create a default admin account with credentials printed to the console.
+
+**Create Additional Users:**
+
+```bash
+docker-compose exec api python scripts/create_user.py attorney1 attorney1@firm.com SecurePass123
 ```
 
 ### 5. Access the Application

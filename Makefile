@@ -1,4 +1,4 @@
-.PHONY: env venv install test unit-test integration-test e2e-test test-coverage clean migrate-up migrate-down migrate-create migrate-history migrate-current docker-build docker-up docker-down docker-logs docker-restart docker-clean
+.PHONY: env venv install test unit-test integration-test e2e-test test-coverage clean migrate-up migrate-down migrate-create migrate-history migrate-current seed-db create-user docker-build docker-up docker-down docker-logs docker-restart docker-clean
 
 env:
 	@if [ -f .env ]; then \
@@ -111,6 +111,27 @@ migrate-current:
 		exit 1; \
 	fi
 	@. venv/bin/activate && alembic current --verbose
+
+seed-db:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Seeding database with initial admin user..."
+	@. venv/bin/activate && python scripts/seed_db.py
+
+create-user:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@if [ -z "$(USERNAME)" ] || [ -z "$(EMAIL)" ] || [ -z "$(PASSWORD)" ]; then \
+		echo "Error: Missing required arguments."; \
+		echo "Usage: make create-user USERNAME=username EMAIL=email@example.com PASSWORD=password"; \
+		exit 1; \
+	fi
+	@echo "Creating new user..."
+	@. venv/bin/activate && python scripts/create_user.py "$(USERNAME)" "$(EMAIL)" "$(PASSWORD)"
 
 clean:
 	@echo "Cleaning up generated files..."
