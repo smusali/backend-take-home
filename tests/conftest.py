@@ -404,7 +404,7 @@ def freeze_time():
     Helper to freeze time for testing time-dependent functionality.
     
     Usage:
-        with freeze_time(datetime(2024, 1, 1, 12, 0, 0)) as mock_dt:
+        with freeze_time(datetime(2025, 1, 1, 12, 0, 0)) as mock_dt:
             # time is frozen to the specified datetime
             pass
     """

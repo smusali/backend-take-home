@@ -8,6 +8,23 @@
 
 ---
 
+## Summary
+
+This document provides a comprehensive technical design specification for the Lead Management API, a production-ready FastAPI application that enables legal professionals to collect and manage prospect information through a public submission form and an authenticated internal dashboard.
+
+The system implements a three-tier architecture with clear separation of concerns, following modern best practices for security, scalability, and maintainability. Built with FastAPI, SQLAlchemy, and JWT authentication, the application handles lead submissions with resume uploads, automated email notifications, and secure lead management workflows.
+
+**Key Technical Highlights:**
+- **Framework**: FastAPI with async/await for high performance
+- **Architecture**: Three-tier layered architecture (API, Service, Repository)
+- **Database**: SQLAlchemy ORM with Alembic migrations
+- **Security**: JWT authentication, bcrypt password hashing, comprehensive input validation
+- **Email**: Async SMTP with Jinja2 templates
+- **Testing**: 220+ tests with >95% coverage
+- **Documentation**: Auto-generated OpenAPI/Swagger documentation
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -174,7 +191,7 @@ graph TB
 - **Data Validation**: Built-in Pydantic integration for request/response validation
 - **Performance**: One of the fastest Python frameworks (comparable to Node.js)
 - **Type Safety**: First-class support for Python type hints
-- **Modern**: Built on modern Python standards (Python 3.9+)
+- **Modern**: Built on modern Python standards (Python 3.13+)
 
 ### Database & ORM
 
@@ -645,7 +662,8 @@ username=string&password=string
 stateDiagram-v2
     [*] --> PENDING: Lead Created
     PENDING --> REACHED_OUT: Attorney marks as reached out
-    REACHED_OUT --> [*]: End State
+    REACHED_OUT --> PENDING: Attorney can revert if needed
+    REACHED_OUT --> [*]: Optional End State
     
     note right of PENDING
         Initial state when
@@ -658,7 +676,7 @@ stateDiagram-v2
         Attorney has contacted
         the prospect.
         Timestamp recorded.
-        No further transitions.
+        Can be reverted to PENDING.
     end note
 ```
 
@@ -678,6 +696,7 @@ stateDiagram-v2
   - All new leads start in this state
   - Cannot be created directly in REACHED_OUT state
   - Email must be unique across all leads
+  - Can be transitioned back from REACHED_OUT if needed
 
 #### REACHED_OUT
 - **Description**: Attorney has made contact with the prospect
@@ -685,19 +704,19 @@ stateDiagram-v2
   - Update `status` to REACHED_OUT
   - Set `reached_out_at` timestamp
   - Update `updated_at` timestamp
-- **Valid Transitions**: None (terminal state)
+- **Valid Transitions**: Can transition back to PENDING
 - **Business Rules**:
   - Can only be set by authenticated attorney
-  - Cannot transition back to PENDING
-  - Timestamp is immutable once set
+  - Can transition back to PENDING if attorney needs to revert
+  - Timestamp records when attorney first reached out
 
 ### State Transition Validation
 
 ```python
-# Valid transitions
+# Valid transitions (bidirectional for flexibility)
 VALID_TRANSITIONS = {
     LeadStatus.PENDING: [LeadStatus.REACHED_OUT],
-    LeadStatus.REACHED_OUT: []  # Terminal state
+    LeadStatus.REACHED_OUT: [LeadStatus.PENDING],  # Allow revert
 }
 
 def validate_transition(current_status, new_status):
@@ -863,19 +882,26 @@ graph TB
 
 **Format:**
 ```
-{uuid}_{timestamp}_{original_filename}
+{uuid}_{sanitized_filename}{extension}
 ```
 
 **Example:**
 ```
-a7b3c9d2-4e5f-6789-0123-456789abcdef_1702567890_john_doe_resume.pdf
+a7b3c9d2-4e5f-6789-0123-456789abcdef_john_doe_resume.pdf
 ```
+
+**Implementation Details:**
+- UUID v4 for guaranteed uniqueness
+- Base filename sanitized (alphanumeric, dots, dashes, underscores only)
+- Filename truncated to 50 characters max
+- File extension preserved and normalized to lowercase
+- Path traversal characters removed
 
 **Benefits:**
 - **Uniqueness**: UUID prevents collisions
-- **Traceability**: Timestamp for debugging
-- **User-Friendly**: Original filename preserved
-- **Security**: Sanitized filename (remove dangerous characters)
+- **Security**: Sanitized filename prevents directory traversal and injection attacks
+- **User-Friendly**: Original filename partially preserved for identification
+- **Compatibility**: Safe across all filesystems
 
 ### File Validation
 
@@ -979,79 +1005,53 @@ sequenceDiagram
 
 #### 1. Prospect Confirmation Email
 
-**Template:** `app/templates/prospect_confirmation.html`
-**Subject:** Thank you for your submission
-**Content:**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        /* Professional styling */
-    </style>
-</head>
-<body>
-    <h1>Thank You, {{ first_name }}!</h1>
-    
-    <p>We have received your information and resume.</p>
-    
-    <div class="info-box">
-        <h3>What happens next?</h3>
-        <ol>
-            <li>Our attorney will review your submission</li>
-            <li>You will be contacted within 2-3 business days</li>
-            <li>We will discuss your case in detail</li>
-        </ol>
-    </div>
-    
-    <p>
-        <strong>Submission Details:</strong><br>
-        Name: {{ first_name }} {{ last_name }}<br>
-        Email: {{ email }}<br>
-        Submitted: {{ created_at }}
-    </p>
-    
-    <p>Best regards,<br>The Legal Team</p>
-</body>
-</html>
-```
+**Template:** `app/templates/prospect_confirmation.html`  
+**Subject:** Thank you for your submission  
+**Design:** Professional, clean HTML email with responsive styling  
+**Key Elements:**
+- Green-themed header with checkmark indicating successful submission
+- Personalized greeting with prospect's name
+- Submission reference ID (lead UUID) for tracking
+- "What Happens Next?" section with clear timeline:
+  - Review by attorney team
+  - Contact within 3-5 business days
+  - Next steps discussion
+- Professional signature with company name
+- Mobile-responsive design with modern CSS
+- Automated disclaimer in footer
+
+**Template Variables:**
+- `prospect_name`: Prospect's full name
+- `company_name`: Business name from config
+- `lead_id`: Unique lead identifier for reference
 
 #### 2. Attorney Notification Email
 
-**Template:** `app/templates/attorney_notification.html`
-**Subject:** New Lead Submission - {{ first_name }} {{ last_name }}
-**Content:**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        /* Professional styling */
-    </style>
-</head>
-<body>
-    <h1>New Lead Received</h1>
-    
-    <div class="lead-info">
-        <h3>Lead Information:</h3>
-        <table>
-            <tr><th>Name:</th><td>{{ first_name }} {{ last_name }}</td></tr>
-            <tr><th>Email:</th><td><a href="mailto:{{ email }}">{{ email }}</a></td></tr>
-            <tr><th>Submitted:</th><td>{{ created_at }}</td></tr>
-            <tr><th>Lead ID:</th><td>{{ lead_id }}</td></tr>
-        </table>
-    </div>
-    
-    <div class="actions">
-        <a href="{{ dashboard_url }}/leads/{{ lead_id }}" class="button">
-            View Lead in Dashboard
-        </a>
-    </div>
-    
-    <p><small>Resume file attached to this email</small></p>
-</body>
-</html>
-```
+**Template:** `app/templates/attorney_notification.html`  
+**Subject:** New Lead Submission - [Prospect Name]  
+**Design:** Action-oriented alert email with prominent call-to-action  
+**Key Elements:**
+- Blue-themed alert header with "NEW LEAD" badge
+- Bell icon for visual attention
+- Structured lead details section with key information:
+  - Prospect's full name (emphasized)
+  - Email address (clickable mailto link)
+  - Resume filename
+  - Lead ID (monospace reference format)
+  - Current status (PENDING, highlighted in orange)
+- Prominent "View Lead in Dashboard" button linking to dashboard
+- Action required info box with timing expectations
+- Professional footer with system information
+- Mobile-responsive design
+
+**Template Variables:**
+- `prospect_name`: Prospect's full name
+- `prospect_email`: Contact email address
+- `resume_filename`: Name of uploaded resume file
+- `lead_id`: Unique lead identifier
+- `dashboard_url`: URL to the internal dashboard
+
+**Note:** Resume file is referenced but not attached in current implementation (can be downloaded from dashboard)
 
 ### SMTP Configuration
 
@@ -1535,13 +1535,21 @@ logger.error(f"Failed to create lead", exc_info=True, extra={
 
 ### Technology Versions
 
-| Technology | Version | Release Date |
-|------------|---------|--------------|
-| Python | 3.13+ | Oct 2024 |
-| FastAPI | 0.115.6 | Nov 2024 |
-| SQLAlchemy | 2.0.36 | Dec 2024 |
-| Pydantic | 2.10.6 | Dec 2024 |
-| PostgreSQL | 14+ | Sep 2021 |
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Python | 3.13.5 | Runtime environment |
+| FastAPI | 0.115.6 | Web framework |
+| SQLAlchemy | 2.0.36 | ORM and database toolkit |
+| Alembic | 1.14.0 | Database migrations |
+| Pydantic | 2.10.6 | Data validation and settings |
+| uvicorn | 0.34.0 | ASGI server |
+| python-jose | 3.4.0 | JWT token handling |
+| passlib | 1.7.4 | Password hashing |
+| bcrypt | 4.2.1 | Password hashing algorithm |
+| aiosmtplib | 3.0.2 | Async SMTP client |
+| Jinja2 | 3.1.5 | Email template engine |
+| SQLite | 3.x | Development database |
+| PostgreSQL | 14+ | Production database (recommended) |
 
 ### Configuration Management
 
