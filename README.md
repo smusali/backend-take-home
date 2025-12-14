@@ -30,34 +30,81 @@ A production-ready FastAPI application for managing attorney lead submissions wi
 
 ## Prerequisites
 
+### Option 1: Local Development
 - Python 3.9 or higher
 - pip (Python package manager)
 - Virtual environment (recommended)
 - SMTP server access for email notifications (Gmail, SendGrid, etc.)
 
+### Option 2: Docker Deployment (Recommended)
+- Docker Engine 20.10 or higher
+- Docker Compose 2.0 or higher
+- At least 2GB of available RAM
+- SMTP server access for email notifications
+
 ## Quick Start
 
-### 1. Clone the Repository
+### Option 1: Docker Deployment (Recommended)
+
+Docker provides a complete, isolated environment with PostgreSQL database and all dependencies.
+
+#### 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd backend-take-home
 ```
 
-### 2. Set Up Virtual Environment
+#### 2. Configure Environment
+
+```bash
+cp .env.example .env
+# Edit .env with your configuration (REQUIRED: SECRET_KEY, SMTP settings)
+```
+
+#### 3. Start Services
+
+```bash
+docker-compose up -d
+```
+
+#### 4. Initialize Database
+
+```bash
+docker-compose exec api alembic upgrade head
+```
+
+#### 5. Access the Application
+
+- **API**: http://localhost:8000
+- **Docs**: http://localhost:8000/docs
+- **Health**: http://localhost:8000/health
+
+For detailed Docker documentation, see [docs/DOCKER.md](docs/DOCKER.md).
+
+### Option 2: Local Development
+
+#### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd backend-take-home
+```
+
+#### 2. Set Up Virtual Environment
 
 ```bash
 make venv
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+#### 3. Install Dependencies
 
 ```bash
 make install
 ```
 
-### 4. Configure Environment Variables
+#### 4. Configure Environment Variables
 
 ```bash
 make env
@@ -99,7 +146,7 @@ CORS_ORIGINS=http://localhost:3000,http://localhost:8000
 - Use environment-specific SMTP credentials
 - For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833)
 
-### 5. Initialize Database
+#### 5. Initialize Database
 
 ```bash
 make migrate-up
@@ -107,7 +154,7 @@ make migrate-up
 
 This runs Alembic migrations to create the database schema with `leads` and `users` tables.
 
-### 6. Run the Application
+#### 6. Run the Application
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -510,7 +557,60 @@ make clean              # Remove generated files and caches
 
 ## Production Deployment
 
-### Environment Setup
+### Docker Deployment (Recommended)
+
+The application includes production-ready Docker configuration with PostgreSQL database.
+
+#### Quick Deploy
+
+```bash
+# Configure environment
+cp .env.example .env
+# Edit .env with production values
+
+# Generate secure secret key
+SECRET_KEY=$(openssl rand -hex 32)
+# Add to .env
+
+# Start services
+docker-compose up -d
+
+# Initialize database
+docker-compose exec api alembic upgrade head
+
+# View logs
+docker-compose logs -f
+```
+
+#### Production Checklist
+
+1. **Security**:
+   - Generate secure `SECRET_KEY`: `openssl rand -hex 32`
+   - Set `ENVIRONMENT=production` and `DEBUG=False`
+   - Change default PostgreSQL credentials in `docker-compose.yml`
+   - Configure proper CORS origins
+   - Set up HTTPS with reverse proxy (Nginx, Traefik)
+
+2. **Database**:
+   - Backup strategy: `docker-compose exec db pg_dump -U leaduser leaddb > backup.sql`
+   - Configure PostgreSQL connection pool settings
+   - Set up automated backups
+
+3. **Monitoring**:
+   - Health check: http://your-domain.com/health
+   - Container logs: `docker-compose logs -f`
+   - Database monitoring: `docker-compose exec db pg_isready`
+
+4. **Scaling**:
+   - Increase uvicorn workers in Dockerfile
+   - Use Docker Swarm or Kubernetes for orchestration
+   - Set up load balancer for multiple API replicas
+
+For complete Docker documentation, see [docs/DOCKER.md](docs/DOCKER.md).
+
+### Manual Deployment (Alternative)
+
+#### Environment Setup
 1. Set `ENVIRONMENT=production` in `.env`
 2. Set `DEBUG=False`
 3. Generate a secure `SECRET_KEY` (use `openssl rand -hex 32`)
@@ -522,26 +622,18 @@ make clean              # Remove generated files and caches
 6. Set up HTTPS/SSL certificates
 7. Configure proper CORS origins
 
-### Database Migration
+#### Database Migration
 ```bash
 # On production server
 source venv/bin/activate
 make migrate-up
 ```
 
-### Running in Production
+#### Running in Production
 ```bash
 # Using uvicorn with proper workers
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
-
-### Docker Deployment (Optional)
-While not included in this implementation, the application is Docker-ready. Key considerations:
-- Use multi-stage builds for smaller images
-- Mount volumes for database and uploads
-- Use environment variables for configuration
-- Set up proper health checks
-- Use docker-compose for orchestration
 
 ## Troubleshooting
 
@@ -574,6 +666,8 @@ chmod -R 755 uploads
 
 ## Development Commands (Makefile)
 
+### Local Development
+
 | Command | Description |
 |---------|-------------|
 | `make env` | Create `.env` from `.env.example` |
@@ -590,6 +684,17 @@ chmod -R 755 uploads
 | `make migrate-current` | Show current migration version |
 | `make migrate-history` | Show migration history |
 | `make clean` | Remove generated files and caches |
+
+### Docker Commands
+
+| Command | Description |
+|---------|-------------|
+| `make docker-build` | Build Docker images |
+| `make docker-up` | Start all Docker services |
+| `make docker-down` | Stop Docker services |
+| `make docker-logs` | View logs from all services |
+| `make docker-restart` | Restart Docker services |
+| `make docker-clean` | Stop and remove all containers and volumes |
 
 ## Additional Documentation
 

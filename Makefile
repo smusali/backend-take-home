@@ -1,4 +1,4 @@
-.PHONY: env venv install test unit-test integration-test e2e-test test-coverage clean migrate-up migrate-down migrate-create migrate-history migrate-current
+.PHONY: env venv install test unit-test integration-test e2e-test test-coverage clean migrate-up migrate-down migrate-create migrate-history migrate-current docker-build docker-up docker-down docker-logs docker-restart docker-clean
 
 env:
 	@if [ -f .env ]; then \
@@ -123,3 +123,30 @@ clean:
 	@find . -type f -name "*.db" -delete 2>/dev/null || true
 	@rm -rf .coverage htmlcov/ 2>/dev/null || true
 	@echo "Cleanup completed."
+
+docker-build:
+	@echo "Building Docker images..."
+	@docker-compose build
+
+docker-up:
+	@echo "Starting Docker services..."
+	@docker-compose up -d
+	@echo "Services started. Waiting for health checks..."
+	@sleep 5
+	@docker-compose ps
+
+docker-down:
+	@echo "Stopping Docker services..."
+	@docker-compose down
+
+docker-logs:
+	@docker-compose logs -f
+
+docker-restart:
+	@echo "Restarting Docker services..."
+	@docker-compose restart
+
+docker-clean:
+	@echo "Stopping and removing all Docker resources..."
+	@docker-compose down -v
+	@echo "Docker cleanup completed."

@@ -152,8 +152,9 @@ cython_debug/
 # Alembic
 alembic/versions/*.pyc
 
-# Uploaded files
-uploads/
+# Uploaded files (keep directory structure but ignore contents)
+uploads/**/*
+!uploads/.gitkeep
 resumes/
 
 # Logs
