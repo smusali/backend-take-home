@@ -2,8 +2,10 @@
 Main FastAPI application.
 
 Configures and initializes the FastAPI application with all routes,
-middleware, exception handlers, and settings.
+middleware, exception handlers, logging, and settings.
 """
+
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +13,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.api.v1.api import api_router
 from app.utils.exception_handlers import register_exception_handlers
+from app.utils.logging_config import setup_logging, get_logger, log_startup, log_shutdown
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifespan manager.
+    
+    Handles startup and shutdown events for the application.
+    """
+    settings = get_settings()
+    logger = get_logger(__name__)
+    
+    # Startup
+    log_startup(logger, settings.ENVIRONMENT, settings.DEBUG)
+    
+    yield
+    
+    # Shutdown
+    log_shutdown(logger)
 
 
 def create_application() -> FastAPI:
@@ -22,6 +44,10 @@ def create_application() -> FastAPI:
     """
     settings = get_settings()
     
+    # Initialize logging
+    setup_logging()
+    logger = get_logger(__name__)
+    
     # Create FastAPI app
     app = FastAPI(
         title="Lead Management API",
@@ -30,7 +56,8 @@ def create_application() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
-        debug=settings.DEBUG
+        debug=settings.DEBUG,
+        lifespan=lifespan
     )
     
     # Configure CORS
@@ -52,7 +79,12 @@ def create_application() -> FastAPI:
     @app.get("/health", tags=["health"])
     async def health_check():
         """Health check endpoint."""
-        return {"status": "healthy", "version": "1.0.0"}
+        logger.debug("Health check requested")
+        return {
+            "status": "healthy",
+            "version": "1.0.0",
+            "environment": settings.ENVIRONMENT
+        }
     
     return app
 
