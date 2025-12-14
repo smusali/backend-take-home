@@ -1,4 +1,4 @@
-.PHONY: env venv install unittest clean migrate-up migrate-down migrate-create migrate-history migrate-current
+.PHONY: env venv install test unit-test integration-test e2e-test test-coverage clean migrate-up migrate-down migrate-create migrate-history migrate-current
 
 env:
 	@if [ -f .env ]; then \
@@ -51,6 +51,23 @@ integration-test:
 	fi
 	@echo "Running integration tests..."
 	@. venv/bin/activate && pytest tests/integration/ -v --tb=short
+
+e2e-test:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Running end-to-end tests..."
+	@. venv/bin/activate && pytest tests/e2e/ -v --tb=short
+
+test-coverage:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Running tests with coverage..."
+	@. venv/bin/activate && pytest tests/ --cov=app --cov-report=html --cov-report=term-missing -v
+	@echo "Coverage report generated in htmlcov/index.html"
 
 migrate-up:
 	@if [ ! -d venv ]; then \
