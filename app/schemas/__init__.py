@@ -19,6 +19,13 @@ from app.schemas.user import (
     TokenData,
 )
 
+from app.schemas.enums import (
+    LeadStatus,
+    LEAD_STATUS_DISPLAY_NAMES,
+    LEAD_STATUS_DESCRIPTIONS,
+    get_all_lead_statuses,
+)
+
 __all__ = [
     # Lead schemas
     "LeadCreate",
@@ -31,4 +38,9 @@ __all__ = [
     "UserResponse",
     "Token",
     "TokenData",
+    # Enums
+    "LeadStatus",
+    "LEAD_STATUS_DISPLAY_NAMES",
+    "LEAD_STATUS_DESCRIPTIONS",
+    "get_all_lead_statuses",
 ]

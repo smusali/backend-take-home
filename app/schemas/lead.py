@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
-from app.models.lead import LeadStatus
+from app.schemas.enums import LeadStatus
 
 
 class LeadCreate(BaseModel):
