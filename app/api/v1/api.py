@@ -6,7 +6,7 @@ Combines all v1 endpoints into a single router.
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import public, leads
+from app.api.v1.endpoints import public, leads, auth
 
 
 api_router = APIRouter()
@@ -16,6 +16,13 @@ api_router.include_router(
     public.router,
     prefix="",
     tags=["public"]
+)
+
+# Include authentication endpoints
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["authentication"]
 )
 
 # Include protected endpoints (authentication required)

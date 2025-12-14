@@ -4,6 +4,6 @@ API v1 endpoints package.
 Contains all endpoint modules for version 1 of the API.
 """
 
-from app.api.v1.endpoints import public, leads
+from app.api.v1.endpoints import public, leads, auth
 
-__all__ = ["public", "leads"]
+__all__ = ["public", "leads", "auth"]
