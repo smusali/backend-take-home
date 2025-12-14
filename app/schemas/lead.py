@@ -8,9 +8,10 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
 
 from app.schemas.enums import LeadStatus
+from app.schemas.validators import sanitize_name, validate_email_format
 
 
 class LeadCreate(BaseModel):
@@ -42,6 +43,18 @@ class LeadCreate(BaseModel):
         description="Prospect's email address",
         examples=["john.doe@example.com"]
     )
+    
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def sanitize_names(cls, v: str) -> str:
+        """Sanitize name fields to prevent XSS and normalize whitespace."""
+        return sanitize_name(v)
+    
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        """Normalize email to lowercase."""
+        return validate_email_format(v)
 
 
 class LeadUpdate(BaseModel):

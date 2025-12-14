@@ -26,6 +26,18 @@ from app.schemas.enums import (
     get_all_lead_statuses,
 )
 
+from app.schemas.validators import (
+    validate_file_size,
+    validate_file_extension,
+    validate_resume_file,
+    sanitize_name,
+    validate_email_format,
+    validate_status_transition,
+    validate_password_strength,
+    ALLOWED_RESUME_EXTENSIONS,
+    ALLOWED_RESUME_MIME_TYPES,
+)
+
 __all__ = [
     # Lead schemas
     "LeadCreate",
@@ -43,4 +55,14 @@ __all__ = [
     "LEAD_STATUS_DISPLAY_NAMES",
     "LEAD_STATUS_DESCRIPTIONS",
     "get_all_lead_statuses",
+    # Validators
+    "validate_file_size",
+    "validate_file_extension",
+    "validate_resume_file",
+    "sanitize_name",
+    "validate_email_format",
+    "validate_status_transition",
+    "validate_password_strength",
+    "ALLOWED_RESUME_EXTENSIONS",
+    "ALLOWED_RESUME_MIME_TYPES",
 ]

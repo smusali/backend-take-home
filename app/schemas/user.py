@@ -8,7 +8,9 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+
+from app.schemas.validators import validate_email_format, validate_password_strength
 
 
 class UserCreate(BaseModel):
@@ -40,6 +42,19 @@ class UserCreate(BaseModel):
         description="Password (will be hashed before storage)",
         examples=["SecurePassword123!"]
     )
+    
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        """Normalize email to lowercase."""
+        return validate_email_format(v)
+    
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password strength."""
+        validate_password_strength(v)
+        return v
 
 
 class UserLogin(BaseModel):
