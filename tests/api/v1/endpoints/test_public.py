@@ -6,8 +6,6 @@ Tests the complete lead submission workflow through the API.
 
 from io import BytesIO
 from unittest.mock import patch, AsyncMock, MagicMock
-from datetime import datetime, UTC
-import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,7 +16,6 @@ from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.db.base import Base
 from app.db.database import get_db
-from app.models.lead import Lead, LeadStatus
 
 
 # Create in-memory SQLite database for testing
