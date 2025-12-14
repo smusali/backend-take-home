@@ -147,8 +147,10 @@ class TestAuthenticateUser:
         from app.models.user import User
         
         self.engine = get_engine()
+        # Create tables in a separate connection to ensure they're committed
         Base.metadata.create_all(bind=self.engine)
         
+        # Now create a new session for the test
         session_factory = get_session_factory()
         self.db = session_factory()
         self.user_repo = UserRepository(User, self.db)
@@ -160,6 +162,9 @@ class TestAuthenticateUser:
             "email": "test@example.com",
             "hashed_password": hash_password(self.test_password)
         })
+        # Ensure the user is committed to the database
+        self.db.commit()
+        self.db.refresh(self.test_user)
     
     def teardown_method(self):
         """Cleanup test database."""

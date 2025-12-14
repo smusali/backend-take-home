@@ -36,7 +36,7 @@ class LeadService:
             db: SQLAlchemy database session
         """
         self.db = db
-        self.lead_repo = LeadRepository(db)
+        self.lead_repo = LeadRepository(Lead, db)
         self.file_service = FileService()
         self.email_service = EmailService()
         self.settings = get_settings()
