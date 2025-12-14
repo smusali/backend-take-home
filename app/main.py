@@ -14,6 +14,7 @@ from app.core.config import get_settings
 from app.api.v1.api import api_router
 from app.utils.exception_handlers import register_exception_handlers
 from app.utils.logging_config import setup_logging, get_logger, log_startup, log_shutdown
+from app.utils.middleware import RequestLoggingMiddleware, ErrorTrackingMiddleware
 
 
 @asynccontextmanager
@@ -59,6 +60,12 @@ def create_application() -> FastAPI:
         debug=settings.DEBUG,
         lifespan=lifespan
     )
+    
+    # Add request logging middleware (first to capture all requests)
+    app.add_middleware(RequestLoggingMiddleware)
+    
+    # Add error tracking middleware
+    app.add_middleware(ErrorTrackingMiddleware)
     
     # Configure CORS
     app.add_middleware(

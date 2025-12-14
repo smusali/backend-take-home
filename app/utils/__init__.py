@@ -2,7 +2,7 @@
 Utility modules for the Lead Management API.
 
 Contains reusable utilities including custom exceptions,
-exception handlers, logging configuration, and other helper functions.
+exception handlers, logging configuration, middleware, and other helper functions.
 """
 
 from app.utils.exceptions import (
@@ -39,6 +39,12 @@ from app.utils.logging_config import (
     log_shutdown,
 )
 
+from app.utils.middleware import (
+    RequestLoggingMiddleware,
+    ErrorTrackingMiddleware,
+    add_request_id_to_response,
+)
+
 __all__ = [
     # Exceptions
     "LeadManagementException",
@@ -68,4 +74,8 @@ __all__ = [
     "log_database_operation",
     "log_startup",
     "log_shutdown",
+    # Middleware
+    "RequestLoggingMiddleware",
+    "ErrorTrackingMiddleware",
+    "add_request_id_to_response",
 ]
