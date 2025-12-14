@@ -95,11 +95,12 @@ def db_session(db_engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="function")
-def client(db_session):
+def client(db_session, mock_smtp):
     """
     Create a FastAPI test client with database session override.
     
     Returns a synchronous test client for API testing.
+    Automatically mocks SMTP to prevent actual email sending.
     """
     def override_get_db():
         try:

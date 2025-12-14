@@ -28,13 +28,29 @@ install:
 	@. venv/bin/activate && pip install -r requirements.txt
 	@echo "Dependencies installed successfully."
 
-unittest:
+test:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Running tests..."
+	@. venv/bin/activate && pytest tests/ -v --tb=short
+
+unit-test:
 	@if [ ! -d venv ]; then \
 		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
 		exit 1; \
 	fi
 	@echo "Running unit tests..."
-	@. venv/bin/activate && pytest tests/ -v --tb=short
+	@. venv/bin/activate && pytest tests/unit/ -v --tb=short
+
+integration-test:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Running integration tests..."
+	@. venv/bin/activate && pytest tests/integration/ -v --tb=short
 
 migrate-up:
 	@if [ ! -d venv ]; then \
