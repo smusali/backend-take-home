@@ -2,7 +2,7 @@
 Main FastAPI application.
 
 Configures and initializes the FastAPI application with all routes,
-middleware, and settings.
+middleware, exception handlers, and settings.
 """
 
 from fastapi import FastAPI
@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.api.v1.api import api_router
+from app.utils.exception_handlers import register_exception_handlers
 
 
 def create_application() -> FastAPI:
@@ -28,7 +29,8 @@ def create_application() -> FastAPI:
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
-        openapi_url="/openapi.json"
+        openapi_url="/openapi.json",
+        debug=settings.DEBUG
     )
     
     # Configure CORS
@@ -40,6 +42,9 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
     
+    # Register exception handlers
+    register_exception_handlers(app)
+    
     # Include API router
     app.include_router(api_router, prefix="/api/v1")
     
@@ -47,7 +52,7 @@ def create_application() -> FastAPI:
     @app.get("/health", tags=["health"])
     async def health_check():
         """Health check endpoint."""
-        return {"status": "healthy"}
+        return {"status": "healthy", "version": "1.0.0"}
     
     return app
 
