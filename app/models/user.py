@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, UTC
 
 from sqlalchemy import String, Boolean, DateTime
+import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -32,6 +33,7 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,
         default=uuid.uuid4,
+        server_default=sa.text("(lower(hex(randomblob(16))))"),
         index=True
     )
     
@@ -57,13 +59,15 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
-        default=True
+        default=True,
+        server_default=sa.true()
     )
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=lambda: datetime.now(UTC)
+        default=lambda: datetime.now(UTC),
+        server_default=sa.func.current_timestamp()
     )
     
     def __repr__(self) -> str:

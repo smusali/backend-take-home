@@ -1,4 +1,4 @@
-.PHONY: env venv install unittest clean
+.PHONY: env venv install unittest clean migrate-up migrate-down migrate-create migrate-history migrate-current
 
 env:
 	@if [ -f .env ]; then \
@@ -35,6 +35,49 @@ unittest:
 	fi
 	@echo "Running unit tests..."
 	@. venv/bin/activate && pytest tests/ -v --tb=short
+
+migrate-up:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Running database migrations..."
+	@. venv/bin/activate && alembic upgrade head
+	@echo "Migrations applied successfully."
+
+migrate-down:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@echo "Reverting last migration..."
+	@. venv/bin/activate && alembic downgrade -1
+
+migrate-create:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@if [ -z "$(MSG)" ]; then \
+		echo "Error: Migration message required. Usage: make migrate-create MSG='description'"; \
+		exit 1; \
+	fi
+	@echo "Creating new migration: $(MSG)"
+	@. venv/bin/activate && alembic revision --autogenerate -m "$(MSG)"
+
+migrate-history:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@. venv/bin/activate && alembic history --verbose
+
+migrate-current:
+	@if [ ! -d venv ]; then \
+		echo "Error: Virtual environment not found. Run 'make venv' and 'make install' first."; \
+		exit 1; \
+	fi
+	@. venv/bin/activate && alembic current --verbose
 
 clean:
 	@echo "Cleaning up generated files..."

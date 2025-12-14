@@ -11,6 +11,7 @@ from datetime import datetime, UTC
 from typing import Optional
 
 from sqlalchemy import String, Enum, DateTime, Index
+import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -47,6 +48,7 @@ class Lead(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True,
         default=uuid.uuid4,
+        server_default=sa.text("(lower(hex(randomblob(16))))"),
         index=True
     )
     
@@ -76,6 +78,7 @@ class Lead(Base):
         Enum(LeadStatus, native_enum=False, length=20),
         nullable=False,
         default=LeadStatus.PENDING,
+        server_default=LeadStatus.PENDING.value,
         index=True
     )
     
@@ -83,6 +86,7 @@ class Lead(Base):
         DateTime,
         nullable=False,
         default=lambda: datetime.now(UTC),
+        server_default=sa.func.current_timestamp(),
         index=True
     )
     
@@ -90,6 +94,7 @@ class Lead(Base):
         DateTime,
         nullable=False,
         default=lambda: datetime.now(UTC),
+        server_default=sa.func.current_timestamp(),
         onupdate=lambda: datetime.now(UTC)
     )
     
