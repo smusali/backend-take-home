@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You for Your Submission</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #4CAF50;
+        }
+        .header h1 {
+            color: #2E7D32;
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .content p {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .highlight {
+            background-color: #E8F5E9;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            margin: 20px 0;
+        }
+        .reference {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #666;
+        }
+        .next-steps {
+            background-color: #F5F5F5;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .next-steps h2 {
+            color: #2E7D32;
+            font-size: 20px;
+            margin-top: 0;
+        }
+        .next-steps ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #E0E0E0;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .signature {
+            margin-top: 30px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✓ Submission Received</h1>
+        </div>
+        
+        <div class="content">
+            <p>Dear {{ prospect_name }},</p>
+            
+            <p>Thank you for submitting your information to {{ company_name }}. We have successfully received your application and are excited to review your qualifications.</p>
+            
+            <div class="highlight">
+                <p><strong>Your submission reference:</strong></p>
+                <p class="reference">{{ lead_id }}</p>
+            </div>
+            
+            <div class="next-steps">
+                <h2>What Happens Next?</h2>
+                <ul>
+                    <li><strong>Review:</strong> An attorney from our team will carefully review your submitted information and resume.</li>
+                    <li><strong>Contact:</strong> If your qualifications match our current needs, we will reach out to you via email or phone within 3-5 business days.</li>
+                    <li><strong>Next Steps:</strong> We'll discuss potential opportunities and answer any questions you may have.</li>
+                </ul>
+            </div>
+            
+            <p>Please keep this email for your records. If you need to reference your submission, use the reference number provided above.</p>
+            
+            <p>If you have any immediate questions or need to update your information, please don't hesitate to contact us.</p>
+            
+            <div class="signature">
+                <p>Best regards,<br>
+                {{ company_name }}</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated confirmation email. Please do not reply directly to this message.</p>
+            <p>&copy; 2024 {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

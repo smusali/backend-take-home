@@ -6,5 +6,6 @@ Exports service classes for clean imports throughout the application.
 
 from app.services.auth_service import AuthService
 from app.services.file_service import FileService
+from app.services.email_service import EmailService
 
-__all__ = ["AuthService", "FileService"]
+__all__ = ["AuthService", "FileService", "EmailService"]

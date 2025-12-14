@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Lead Submission</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2196F3;
+        }
+        .header h1 {
+            color: #1565C0;
+            margin: 0;
+            font-size: 28px;
+        }
+        .alert-badge {
+            display: inline-block;
+            background-color: #FF5722;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .lead-details {
+            background-color: #E3F2FD;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .lead-details h2 {
+            color: #1565C0;
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #BBDEFB;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 120px;
+        }
+        .detail-value {
+            color: #333;
+            word-break: break-all;
+        }
+        .action-button {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .action-button:hover {
+            background-color: #1976D2;
+        }
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .info-box {
+            background-color: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-box p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #E0E0E0;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .reference {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #666;
+            background-color: #F5F5F5;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="alert-badge">NEW LEAD</span>
+            <h1>🔔 Lead Submission Alert</h1>
+        </div>
+        
+        <p>A new lead has been submitted and requires your attention.</p>
+        
+        <div class="lead-details">
+            <h2>Lead Details</h2>
+            
+            <div class="detail-row">
+                <div class="detail-label">Name:</div>
+                <div class="detail-value"><strong>{{ prospect_name }}</strong></div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Email:</div>
+                <div class="detail-value"><a href="mailto:{{ prospect_email }}">{{ prospect_email }}</a></div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Resume:</div>
+                <div class="detail-value">{{ resume_filename }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Lead ID:</div>
+                <div class="detail-value"><span class="reference">{{ lead_id }}</span></div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">Status:</div>
+                <div class="detail-value"><strong style="color: #FF9800;">PENDING</strong></div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ dashboard_url }}" class="action-button">View Lead in Dashboard →</a>
+        </div>
+        
+        <div class="info-box">
+            <p><strong>⏱️ Action Required:</strong></p>
+            <p>Please review this lead and reach out to the prospect. Once contacted, update the lead status to "REACHED_OUT" in the system.</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated notification from the Lead Management System.</p>
+            <p>&copy; 2024 Lead Management System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
